@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inspection-service
+  namespace: traceflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inspection-service
+  template:
+    metadata:
+      labels:
+        app: inspection-service
+    spec:
+      containers:
+        - name: inspection-service
+          image: ghcr.io/traceflow/inspection-service:1.0.0
+          ports:
+            - containerPort: 8082
+          env:
+            - name: QUARKUS_HTTP_PORT
+              value: "8082"
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: jdbc:postgresql://postgres:5432/inspection
+            - name: QUARKUS_DATASOURCE_USERNAME
+              value: traceflow
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              value: traceflow
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka:9092
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8082
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inspection-service
+  namespace: traceflow
+spec:
+  selector:
+    app: inspection-service
+  ports:
+    - port: 8082
+      targetPort: 8082

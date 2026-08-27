@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1
+ARG MODULE=catalog-service
+FROM maven:3.9.9-eclipse-temurin-21 AS build
+WORKDIR /src
+COPY pom.xml .
+COPY common ./common
+COPY catalog-service ./catalog-service
+COPY inspection-service ./inspection-service
+COPY notification-service ./notification-service
+ARG MODULE
+RUN mvn -B -pl ${MODULE} -am package -DskipTests -Dspotless.check.skip=true
+
+FROM eclipse-temurin:21-jre
+WORKDIR /work
+ARG MODULE
+COPY --from=build /src/${MODULE}/target/quarkus-app/lib/ ./lib/
+COPY --from=build /src/${MODULE}/target/quarkus-app/*.jar ./
+COPY --from=build /src/${MODULE}/target/quarkus-app/app/ ./app/
+COPY --from=build /src/${MODULE}/target/quarkus-app/quarkus/ ./quarkus/
+EXPOSE 8080
+ENV JAVA_OPTS_APPEND="-Dquarkus.http.host=0.0.0.0"
+ENTRYPOINT ["java","-jar","quarkus-run.jar"]
