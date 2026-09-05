@@ -157,4 +157,4 @@ docs/adr/               Architecture decision records
 
 ## License
 
-Use this project as a public portfolio sample. No proprietary BMW or insurance data is included.
+Public Portfolio Sample
